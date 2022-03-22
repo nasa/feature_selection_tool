@@ -21,8 +21,15 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
 from scipy.stats import anderson
-
-
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_regression
+from sklearn.model_selection import RepeatedKFold
+from sklearn.metrics import r2_score
+from statsmodels.stats.stattools import durbin_watson
+import statsmodels.api as sm 
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import cross_val_score
 
 #---------------------------------------------------------------------------------------------
 # Calculating residulas
@@ -35,7 +42,7 @@ def cal_residual(y_pred, y_org):
 # Reading the CSV file
 #---------------------------------------------------------------------------------------------
 
-data = pd.read_csv("My_csv.csv", nrows= 12) 
+data = pd.read_csv("AMSII_data.csv", nrows= 12) 
 
 #-----------------------------------------------------------------------------------------------
 #Removing features with low variance of processing numerical data 
@@ -148,10 +155,10 @@ print(corr_chemistry_features)
 
 
 
-from heatmap import heatmap, corrplot
+
 
 plt.figure(figsize=(8, 8))
-corrplot(chemistry.corr(), size_scale=300);
+sns.heatmap(chemistry.corr(), annot=False, cmap=plt.cm.CMRmap_r)
 plt.savefig('test2.png', dpi=100)
 
 
@@ -194,15 +201,15 @@ X_norm= ((X-X.min())/(X.max()-X.min()))
 
 # All target varibales
 
-y1=data['Porosity_VF_GS'] 
-y2=data['Porosity_Size_GS']
-y3=data['Grain_Size_FHT']
+y1=data['Porosity VF, GS'] 
+y2=data['Porosity Size, GS']
+y3=data['Grain size, FHT']
 y4= "crystal Struc"
-y5= data['Avg_Carbide_Dia']
-y6=data['Carbide_VF']
-y7=data['Avg._Nitride_Dia']
-y8=data['Nitride_VF']
-y9= data["Grain_Structure_FHT"].astype('category')
+y5= data['Avg. Carbide Dia. (nm)']
+y6=data['Carbide VF']
+y7=data['Avg. Nitride Dia. (nm)']
+y8=data['Nitride VF']
+y9= data["Grain structure, FHT"].astype('category')
 y9=y9.cat.codes
 y11=data['UTS']
 
@@ -213,12 +220,11 @@ y=y11
 
 
 #-------------------------------------------------------------------------------------------------
-#(P-S_1) Feature selction with univariate feature selection
+#(P-S_1) Feature selection with univariate feature selection
 #-------------------------------------------------------------------------------------------------
 
 # powder impact to the microstructure using Univariate feature selection
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_regression
+
 
 
 
@@ -239,7 +245,7 @@ feature_im_prosity_vf= pd.concat([feature_cols,features], axis=1)
 
 
 #-------------------------------------------------------------------------------------------------
-#(P-S_2) Feature selction with forward selection - linear regression
+#(P-S_2) Feature selection with forward selection - linear regression
 #-------------------------------------------------------------------------------------------------
 
 sfs = SFS(LinearRegression(),
@@ -262,13 +268,10 @@ plt.show()
 
 
 #------------------------------------------------------------------------------------
-#(P-S_3) Feature selction with forward selection - ridge regression
+#(P-S_3) Feature selection with forward selection - ridge regression
 #------------------------------------------------------------------------------------
 
-from sklearn.model_selection import RepeatedKFold
-from sklearn.metrics import r2_score
-from statsmodels.stats.stattools import durbin_watson
-import statsmodels.api as sm 
+
 
 
 cv = RepeatedKFold(n_splits=4, n_repeats=3, random_state=1)
@@ -322,7 +325,7 @@ y_pred=prediction_ridge
 
 # Plot Predicted vs Actual
 
-font = {'family' : 'normal',
+font = {#'family' : 'normal',
         'weight' : 'bold',
         }
 
@@ -340,7 +343,7 @@ y_lim = plt.ylim()
 x_lim = plt.xlim()
 plt.rc('font', **font)
 plt.rc('axes', labelsize=18)
-plt.plot(x_lim, y_lim, 'k-', color = 'b')
+plt.plot(x_lim, y_lim, '-', color = 'b')
 plt.savefig(name+".png", dpi=300, bbox_inches = 'tight')
 plt.show()
 coefficient_of_dermination = r2_score(y, prediction_ridge)
@@ -361,7 +364,7 @@ residual = cal_residual(prediction_ridge,y)
 # conduct Durbin-Watson Test
 
 print(durbin_watson(residual))
-plt.plot(prediction_ridge,residual, 'ro', color='green', alpha=0.5)
+plt.plot(prediction_ridge,residual, 'o', color='green', alpha=0.5)
 plt.axhline(y=0, color='r', linestyle='-')
 plt.ylabel('Residuals')
 plt.xlabel('Predicted Value')
@@ -376,7 +379,7 @@ plt.show()
 sm.qqplot(residual, alpha=0.5) 
 y_lim = plt.ylim()
 x_lim = plt.xlim()
-plt.plot(x_lim, y_lim, 'k-', color = 'r')
+plt.plot(x_lim, y_lim, '-', color = 'r')
 plt.ylim(y_lim)
 plt.xlim(x_lim)
 plt.rc('font', **font)
@@ -394,21 +397,21 @@ anderson(residual)
 #------------------------------------------------------------------------------
 
 # Read structure data
-structure_data = pd.read_csv("My_csv.csv", nrows= 18) 
+structure_data = pd.read_csv("AMSII_data.csv", nrows= 18) 
 structure=structure_data.iloc[:, 135:145]
-structure['Grain_Structure_FHT']=structure["Grain_Structure_FHT"].astype('category')
-structure['Grain_Structure_FHT']=structure['Grain_Structure_FHT'].cat.codes
+structure['Grain structure, FHT']=structure["Grain structure, FHT"].astype('category')
+structure['Grain structure, FHT']=structure['Grain structure, FHT'].cat.codes
 X=structure
 X_norm= ((X-X.min())/(X.max()-X.min()))
 
 
 # Read target varibales
 
-y1=structure_data['Hardness_FHT'] 
-y2=structure_data['RaT']
-y3=structure_data['RaL']
-y4=structure_data['AvgHCFlife']
-y5=structure_data['AvgHCFstress']
+y1=structure_data['Hardness, FHT'] 
+y2=structure_data['Ra T']
+y3=structure_data['Ra L']
+y4=structure_data['Avg HCF life']
+y5=structure_data['Avg HCF stress']
 y6=structure_data['Elastic_Modulus']
 y7=structure_data['Prop_Limit']
 y8=structure_data['0.02_YS']
@@ -421,32 +424,34 @@ y=y10
 
 # Check for NaN Values
 idx= np.where(pd.isnull(y))
-y=y.drop(idx[0][0])
-X_norm= X_norm.drop(idx[0][0])
-
+try:
+    y=y.drop(idx[0][0])
+except IndexError:
+    pass
+try:
+    X_norm= X_norm.drop(idx[0][0])
+except IndexError:
+    pass
 
 
 #-------------------------------------------------------------------------------------------------
-#Feature selction with ensemble tree
+#Feature selection with ensemble tree
 #-------------------------------------------------------------------------------------------------
-from sklearn.ensemble import ExtraTreesRegressor
+plt.figure(figsize=(14,14))
 model=ExtraTreesRegressor()
 model.fit(X_norm,y)
 ranked_features= pd.Series(model.feature_importances_, index= X.columns)
 ranked_features.nlargest(30).plot(kind="barh")
 feature_imp_extra_tree=pd.DataFrame(ranked_features.nlargest(20))
-plt.figure(figsize=(14,14))
-
 plt.savefig("extra_tree.png", dpi=300)
 plt.show()
 
 #-------------------------------------------------------------------------------------------------
-#Feature selction with random forest Tree
+#Feature selection with random forest Tree
 #-------------------------------------------------------------------------------------------------
 
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import cross_val_score
 
+plt.figure(figsize=(14,14))
 model= RandomForestRegressor()
 cv = RepeatedKFold(n_splits=4, n_repeats=3, random_state=1)
 n_scores = cross_val_score(model, X_norm, y, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1, error_score='raise')
@@ -456,8 +461,6 @@ model.fit(X_norm,y)
 ranked_features= pd.Series(model.feature_importances_, index= X_norm.columns)
 ranked_features.nlargest(5).plot(kind="barh")
 feature_imp_rf_tree=pd.DataFrame(ranked_features.nlargest(4))
-plt.figure(figsize=(14,14))
-
 X_selected= X_norm[pd.DataFrame(ranked_features.nlargest(4)).index]
 model.fit(X_selected,y)
 prediction_RF=model.predict(X_selected)
@@ -479,7 +482,7 @@ y_lim = plt.ylim()
 x_lim = plt.xlim()
 plt.rc('font', **font)
 plt.rc('axes', labelsize=18)
-plt.plot(x_lim, y_lim, 'k-', color = 'b')
+plt.plot(x_lim, y_lim, '-', color = 'b')
 plt.savefig('RF_tree.png', dpi=300, bbox_inches = 'tight')
 
 

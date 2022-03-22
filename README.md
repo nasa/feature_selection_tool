@@ -12,6 +12,14 @@ The objective of this code is to develop the process-structure-property linkages
 -   Embedded feature selection with random forest regressor.
 -   Embedded feature selection with extra Tree regressor.
 -   Check assumptions for regression.
+
+## Installation
+1. Clone or download the repository
+2. Install the requirements with: `pip install -r requirements.txt`
+
+## Use
+Run Analysis.py for an example. To use your own data change `data = pd.read_csv("AMSII_data.csv", nrows= 12)` to read your own data and change the target columns (ex. `y11=data['UTS']` --> `y11=data['YOUR_TARGET_PROPERTY_HERE']`)
+
 ## Requirements
 
 1.  Python 3.5 +

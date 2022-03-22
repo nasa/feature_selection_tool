@@ -2,7 +2,7 @@
 """
 Created on Tue Mar 16 11:49:19 2021
 
-@author: 14198
+@author: Nishan Senanayake
 """
 
 
@@ -15,13 +15,17 @@ from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
-
-
+from statsmodels.stats.stattools import durbin_watson
+import statsmodels.api as sm 
+from sklearn.model_selection import RepeatedKFold
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_regression
+from sklearn.metrics import r2_score
 
 
 #Reading the CSV
 
-data = pd.read_csv("My_csv.csv", nrows= 12) 
+data = pd.read_csv("AMSII_data.csv", nrows= 12) 
 
 #-----------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------
@@ -42,7 +46,7 @@ constant_columns= [column  for column in processing_data.columns
 
 #------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------
-# PSD feature selction using Pearson Correlation
+# PSD feature selection using Pearson Correlation
 
 
 process_data_no_cons= processing_data.drop(constant_columns, axis=1)
@@ -122,15 +126,15 @@ X=process_data
 #Target varibales
 #----------------------------------------------------------------------------------------
 
-property_data = pd.read_csv("My_csv.csv", nrows= 12) 
+property_data = pd.read_csv("AMSII_data.csv", nrows= 12) 
 
 
 #Assign depent varibale
-y1=property_data['Hardness_FHT'] 
-y2=property_data['RaT']
-y3=property_data['RaL']
-y4=property_data['AvgHCFlife']
-y5=property_data['AvgHCFstress']
+y1=property_data['Hardness, FHT'] 
+y2=property_data['Ra T']
+y3=property_data['Ra L']
+y4=property_data['Avg HCF life']
+y5=property_data['Avg HCF stress']
 y6=property_data['Elastic_Modulus']
 y7=property_data['Prop_Limit']
 y8=property_data['0.02_YS']
@@ -144,10 +148,7 @@ name="y8"
 
 X_norm= ((X-X.min())/(X.max()-X.min()))
 
-from sklearn.model_selection import RepeatedKFold
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_regression
-from sklearn.metrics import r2_score
+
 
 # idx= np.where(pd.isnull(y))
 # y=y.drop(idx[0][0])
@@ -196,7 +197,7 @@ y_pred=prediction_ridge
 #prediction_ridge= np.round(prediction_ridge)
 
 
-font = {'family' : 'normal',
+font = {#'family' : 'normal',
         'weight' : 'bold',
         }
 
@@ -214,7 +215,7 @@ y_lim = plt.ylim()
 x_lim = plt.xlim()
 plt.rc('font', **font)
 plt.rc('axes', labelsize=18)
-plt.plot(x_lim, y_lim, 'k-', color = 'b')
+plt.plot(x_lim, y_lim, '-', color = 'b')
 plt.savefig(name+".png", dpi=300, bbox_inches = 'tight')
 plt.show()
 coefficient_of_dermination = r2_score(y, prediction_ridge)
@@ -231,8 +232,7 @@ columns_importance=  np.array(list(zip(sfs_ridge_forward.k_feature_names_, model
 
 # 1 Independence  no correlation between consecutive residuals
 
-from statsmodels.stats.stattools import durbin_watson
-import statsmodels.api as sm 
+
 
 def cal_residual(y_pred, y_org):
      return  (y_pred-y_org)
@@ -242,7 +242,7 @@ def cal_residual(y_pred, y_org):
 
 residual = cal_residual(prediction_ridge,y)
 print(durbin_watson(residual))
-plt.plot(prediction_ridge,residual, 'ro', color='green', alpha=0.5)
+plt.plot(prediction_ridge,residual, 'o', color='green', alpha=0.5)
 plt.axhline(y=0, color='r', linestyle='-')
 plt.ylabel('Residuals')
 plt.xlabel('Predicted Value')
@@ -256,7 +256,7 @@ plt.show()
 sm.qqplot(residual, alpha=0.5) 
 y_lim = plt.ylim()
 x_lim = plt.xlim()
-plt.plot(x_lim, y_lim, 'k-', color = 'r')
+plt.plot(x_lim, y_lim, '-', color = 'r')
 plt.ylim(y_lim)
 plt.xlim(x_lim)
 plt.rc('font', **font)
